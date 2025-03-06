@@ -2,6 +2,32 @@
 
 A simple app to run Docker containers easily.
 
+- Create a folder on your machine (i.e., docker-apps)
+- Create your docker-compose file in these folders
+
+when you want to run those containers just type
+
+`dockit container_name`
+
+## FAQs 
+
+Wait. Why not just use docker-compose.
+
+Great question, I was doing that for a while, this tool is about centralizing and standardizing the way I invoke containers on my system. I want it to be nearly as easy as running a shell command.
+
+Instead of 
+
+```bash
+cd /path/to/containers/openwebui
+docker-compose up -d
+```
+
+I can just type
+
+```bash
+dockit openwebui
+```
+
 ## Installation
 
 Install via pipx or pip:
