@@ -11,7 +11,7 @@ when you want to run those containers just type
 
 ## FAQs 
 
-Wait. Why not just use docker-compose.
+Wait! Why not just use docker-compose?
 
 Great question, I was doing that for a while, this tool is about centralizing and standardizing the way I invoke containers on my system. I want it to be nearly as easy as running a shell command.
 
