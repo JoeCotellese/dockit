@@ -48,9 +48,10 @@ We welcome contributions! To get started:
 ### Code Style
 
 - Follow **PEP8** for Python code formatting.
-- Use **black** for code formatting:
+- Use **ruff** for formatting and linting:
     ```bash
-    black .
+    ruff check .
+    ruff format .
     ```
 - Ensure all changes are **type-checked** with `mypy`:
     ```bash
