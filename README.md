@@ -57,7 +57,7 @@ pip install .
 
 ## Contribution
 
-We welcome contributions! To get started:
+Contributions welcome! To get started:
 
 1. **Fork the repository** and clone your local copy.
 2. **Install dependencies** using Poetry:
