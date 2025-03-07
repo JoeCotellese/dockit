@@ -1,5 +1,5 @@
 [project]
-name = "dockit"
+name = "ezdocker"
 version = "0.1.0"
 description = "An app to install and run containers from the shell."
 authors = [
@@ -8,13 +8,15 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "docker (>=7.1.0,<8.0.0)",
+    "pyyaml (>=6.0.2,<7.0.0)"
 ]
 
 [tool.poetry]
-packages = [{include = "dockit", from = "src"}]
+packages = [{include = "ezdocker", from = "src"}]
 
 [tool.poetry.scripts]
-dockit = "dockit.cli:main"
+ezdocker = "ezdocker.cli:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
