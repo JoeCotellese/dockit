@@ -53,7 +53,7 @@ pip install .
 2. Run a container:
 
     ```bash
-    EZDock <container_name>
+    exdock <container_name>
     ```
 
 ## Contribution
