@@ -1,4 +1,4 @@
-# Dockit
+# EZDock
 
 A simple app to run Docker containers easily.
 
@@ -7,7 +7,7 @@ A simple app to run Docker containers easily.
 
 when you want to run those containers just type
 
-`dockit container_name`
+`ezdock container_name`
 
 ## FAQs 
 
@@ -25,7 +25,7 @@ docker-compose up -d
 I can just type
 
 ```bash
-dockit openwebui
+ezdock openwebui
 ```
 
 ## Installation
@@ -33,6 +33,7 @@ dockit openwebui
 Install via pipx or pip:
 
 ```bash
+poetry build
 # Using pipx
 pipx install .
 
@@ -42,7 +43,7 @@ pip install .
 
 ## Usage
 
-1. Create a config file at `~/.dockit_config` with the following content:
+1. Create a config file at `~/.ezdock_config` with the following content:
 
     ```ini
     [global]
@@ -52,7 +53,7 @@ pip install .
 2. Run a container:
 
     ```bash
-    dockit <container_name>
+    EZDock <container_name>
     ```
 
 ## Contribution
@@ -81,7 +82,7 @@ Contributions welcome! To get started:
     ```
 - Ensure all changes are **type-checked** with `mypy`:
     ```bash
-    mypy dockit/
+    mypy ezdock/
     ```
 
 ### Feature Requests & Issues
