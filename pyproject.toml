@@ -1,6 +1,6 @@
 [project]
 name = "ezdocker"
-version = "0.1.0"
+version = "0.2.0"
 description = "An app to install and run containers from the shell."
 authors = [
     {name = "Joe Cotellese",email = "joe@cotellese.net"}

@@ -1,4 +1,4 @@
-# EZDock
+# EZDocker
 
 A simple app to run Docker containers easily.
 
@@ -7,7 +7,7 @@ A simple app to run Docker containers easily.
 
 when you want to run those containers just type
 
-`ezdock container_name`
+`ezdocker container_name`
 
 ## FAQs 
 
@@ -25,7 +25,7 @@ docker-compose up -d
 I can just type
 
 ```bash
-ezdock openwebui
+ezdocker openwebui
 ```
 
 ## Installation
@@ -53,19 +53,19 @@ pip install .
 2. Run a container:
 
     ```bash
-    ezdock start <container_name>
+    ezdocker start <container_name>
     ```
 
 3. Stop a container:
 
     ```bash
-    ezdock stop <container_name>
+    ezdocker stop <container_name>
     ```
 
 4. Get status of a container
 
     ```bash
-    ezdock status <container_name>
+    ezdocker status <container_name>
     openwebui - http://localhost:9000
     flowise - http://localhost:3000
     ```
@@ -96,7 +96,7 @@ Contributions welcome! To get started:
     ```
 - Ensure all changes are **type-checked** with `mypy`:
     ```bash
-    mypy ezdock/
+    mypy ezdocker/
     ```
 
 ### Feature Requests & Issues
