@@ -115,6 +115,26 @@ def restart_container(container_name, base_directory):
     # Then start them up again
     run_container(container_name, base_directory)
 
+def status_containers(base_directory):
+    client = docker.from_env()
+    containers = client.containers.list()
+
+    if not containers:
+        print("No running containers found.")
+        return
+
+    for container in containers:
+        project_name = container.labels.get("com.docker.compose.project")
+        if project_name:
+            ports = container.attrs['NetworkSettings']['Ports']
+            for port, mappings in ports.items():
+                if mappings:
+                    for mapping in mappings:
+                        host_port = mapping['HostPort']
+                        print(f"{project_name} - http://localhost:{host_port}")
+                else:
+                    print(f"{project_name} - No ports exposed")
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -122,10 +142,10 @@ def main():
     )
     parser.add_argument(
         "command",
-        choices=["start", "stop", "restart"],
-        help="Command to execute (start, stop, or restart)",
+        choices=["start", "stop", "restart", "status"],
+        help="Command to execute (start, stop, restart, or status)",
     )
-    parser.add_argument("container_name", help="Name of the container directory")
+    parser.add_argument("container_name", nargs='?', help="Name of the container directory")
     args = parser.parse_args()
 
     base_directory = load_config()
@@ -136,6 +156,8 @@ def main():
         stop_container(args.container_name, base_directory)
     elif args.command == "restart":
         restart_container(args.container_name, base_directory)
+    elif args.command == "status":
+        status_containers(base_directory)
 
 
 if __name__ == "__main__":

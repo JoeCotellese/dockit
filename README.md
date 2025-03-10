@@ -53,7 +53,21 @@ pip install .
 2. Run a container:
 
     ```bash
-    exdock <container_name>
+    ezdock start <container_name>
+    ```
+
+3. Stop a container:
+
+    ```bash
+    ezdock stop <container_name>
+    ```
+
+4. Get status of a container
+
+    ```bash
+    ezdock status <container_name>
+    openwebui - http://localhost:9000
+    flowise - http://localhost:3000
     ```
 
 ## Contribution
