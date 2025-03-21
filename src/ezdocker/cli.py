@@ -3,9 +3,10 @@ import os
 import sys
 import subprocess
 import configparser
-import argparse
 import docker
 import time
+import click
+import webbrowser
 
 
 def expand_path(path):
@@ -115,6 +116,7 @@ def restart_container(container_name, base_directory):
     # Then start them up again
     run_container(container_name, base_directory)
 
+
 def status_containers(base_directory):
     client = docker.from_env()
     containers = client.containers.list()
@@ -126,39 +128,79 @@ def status_containers(base_directory):
     for container in containers:
         project_name = container.labels.get("com.docker.compose.project")
         if project_name:
-            ports = container.attrs['NetworkSettings']['Ports']
+            ports = container.attrs["NetworkSettings"]["Ports"]
             for port, mappings in ports.items():
                 if mappings:
                     for mapping in mappings:
-                        host_port = mapping['HostPort']
+                        host_port = mapping["HostPort"]
                         print(f"{project_name} - http://localhost:{host_port}")
                 else:
                     print(f"{project_name} - No ports exposed")
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Manage Docker containers from their docker-compose configurations."
-    )
-    parser.add_argument(
-        "command",
-        choices=["start", "stop", "restart", "status"],
-        help="Command to execute (start, stop, restart, or status)",
-    )
-    parser.add_argument("container_name", nargs='?', help="Name of the container directory")
-    args = parser.parse_args()
+def open_container(container_name, base_directory):
+    client = docker.from_env()
+    project_name = os.path.basename(container_name)
 
+    containers = get_project_containers(client, project_name)
+    running_containers = [c for c in containers if c.status == "running"]
+
+    if not running_containers:
+        print("No running containers found.")
+        return
+
+    for container in running_containers:
+        ports = container.attrs["NetworkSettings"]["Ports"]
+        for port, mappings in ports.items():
+            if mappings:
+                for mapping in mappings:
+                    host_port = mapping["HostPort"]
+                    url = f"http://localhost:{host_port}"
+                    print(f"Opening {url}")
+                    webbrowser.open(url)
+                    return
+            else:
+                print(f"{project_name} - No ports exposed")
+
+
+@click.group()
+def cli():
+    pass
+
+
+@cli.command(help="Start the specified container.")
+@click.argument("container_name")
+def start(container_name):
     base_directory = load_config()
+    run_container(container_name, base_directory)
 
-    if args.command == "start":
-        run_container(args.container_name, base_directory)
-    elif args.command == "stop":
-        stop_container(args.container_name, base_directory)
-    elif args.command == "restart":
-        restart_container(args.container_name, base_directory)
-    elif args.command == "status":
-        status_containers(base_directory)
+
+@cli.command(help="Stop the specified container.")
+@click.argument("container_name")
+def stop(container_name):
+    base_directory = load_config()
+    stop_container(container_name, base_directory)
+
+
+@cli.command(help="Restart the specified container.")
+@click.argument("container_name")
+def restart(container_name):
+    base_directory = load_config()
+    restart_container(container_name, base_directory)
+
+
+@cli.command(help="Show the status of running containers.")
+def status():
+    base_directory = load_config()
+    status_containers(base_directory)
+
+
+@cli.command(help="Open the URL of the specified container in the default web browser.")
+@click.argument("container_name")
+def open(container_name):
+    base_directory = load_config()
+    open_container(container_name, base_directory)
 
 
 if __name__ == "__main__":
-    main()
+    cli()
