@@ -8,6 +8,20 @@ import time
 import click
 import webbrowser
 
+from docker.errors import DockerException
+
+
+def get_docker_client():
+    try:
+        client = docker.from_env()
+        # Test connection
+        client.ping()
+        return client
+    except DockerException as e:
+        print("Error: Docker is not available or not running.")
+        print(f"Details: {e}")
+        sys.exit(1)
+
 
 def expand_path(path):
     """Expands ~ and environment variables in a path."""
@@ -56,7 +70,7 @@ def run_container(container_name, base_directory):
         print(f"Error: No docker-compose.yml file found in '{container_dir}'.")
         sys.exit(1)
 
-    client = docker.from_env()
+    client = get_docker_client()
     project_name = os.path.basename(container_dir)
 
     # Check for any running containers with the same project name
@@ -164,7 +178,9 @@ def open_container(container_name, base_directory):
 
 
 @click.group()
+@click.version_option("0.5.0", prog_name="ezdocker")
 def cli():
+    """Manage Docker containers from their docker-compose configurations."""
     pass
 
 
