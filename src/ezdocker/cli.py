@@ -9,18 +9,8 @@ import click
 import webbrowser
 
 from docker.errors import DockerException
-
-
-def get_docker_client():
-    try:
-        client = docker.from_env()
-        # Test connection
-        client.ping()
-        return client
-    except DockerException as e:
-        print("Error: Docker is not available or not running.")
-        print(f"Details: {e}")
-        sys.exit(1)
+from ezdocker.manager import ContainerManager
+from ezdocker.utils import get_docker_client
 
 
 def expand_path(path):
@@ -128,69 +118,56 @@ def restart_container(container_name, base_directory):
     run_container(container_name, base_directory)
 
 
-def status_containers(base_directory):
-    client = get_docker_client()
-    containers = client.containers.list()
-
-    if not containers:
-        print("No running containers found.")
-        return
-
-    # collect host ports by project
-    projects = {}
-    for c in containers:
-        proj = c.labels.get("com.docker.compose.project")
-        if not proj:
-            continue
-        ports = c.attrs["NetworkSettings"]["Ports"] or {}
-        for mappings in ports.values():
-            if mappings:
-                for m in mappings:
-                    projects.setdefault(proj, []).append(m["HostPort"])
-        # ensure project appears even if no ports
-        projects.setdefault(proj, [])
-
-    # print one line per project
-    for proj, hp in projects.items():
-        if hp:
-            # remove duplicates, sort, format URLs
-            urls = ", ".join(f"http://localhost:{p}"
-                             for p in sorted(set(hp)))
-            print(f"{proj} – {urls}")
-        else:
-            print(f"{proj} – No ports exposed")
-
-
 def open_container(container_name, base_directory):
+    """
+    Open the first exposed URL of the named running container.
+    """
     client = get_docker_client()
-    project_name = os.path.basename(container_name)
-
+    project_name = container_name
+    # List running containers for this project
     containers = get_project_containers(client, project_name)
     running_containers = [c for c in containers if c.status == "running"]
 
     if not running_containers:
-        print("No running containers found.")
+        print(f"No running containers found for '{project_name}'.")
         return
 
-    for container in running_containers:
-        ports = container.attrs["NetworkSettings"]["Ports"]
-        for port, mappings in ports.items():
-            if mappings:
-                for mapping in mappings:
-                    host_port = mapping["HostPort"]
-                    url = f"http://localhost:{host_port}"
-                    print(f"Opening {url}")
-                    webbrowser.open(url)
-                    return
-            else:
-                print(f"{project_name} - No ports exposed")
+    # Look for host port mappings
+    ns = running_containers[0].attrs.get("NetworkSettings", {})
+    ports = ns.get("Ports", {}) or {}
+    for mappings in ports.values():
+        if not mappings:
+            continue
+        host_port = mappings[0].get("HostPort")
+        url = f"http://localhost:{host_port}"
+        print(f"Opening {url}")
+        webbrowser.open(url)
+        return
+    print(f"{project_name} – No ports exposed")
 
 
 @click.group()
 @click.version_option("2025.6.1", prog_name="ezdocker")
 def cli():
-    """Manage Docker containers from their docker-compose configurations."""
+    """Manage Docker containers via docker-compose."""
     pass
+
+
+# Use ContainerManager for status
+@cli.command(help="Show the status of running containers.")
+def status():
+    base_directory = load_config()
+    manager = ContainerManager(base_directory)
+    stats = manager.status()
+    if not stats:
+        print("No running containers found.")
+        return
+    for proj, ports in stats.items():
+        if ports:
+            urls = ", ".join(f"http://localhost:{p}" for p in sorted(ports))
+            print(f"{proj} – {urls}")
+        else:
+            print(f"{proj} – No ports exposed")
 
 
 @cli.command(help="Start the specified container.")
@@ -214,13 +191,9 @@ def restart(container_name):
     restart_container(container_name, base_directory)
 
 
-@cli.command(help="Show the status of running containers.")
-def status():
-    base_directory = load_config()
-    status_containers(base_directory)
-
-
-@cli.command(help="Open the URL of the specified container in the default web browser.")
+@cli.command(
+    help="Open the container's URL in the default web browser"
+)
 @click.argument("container_name")
 def open(container_name):
     base_directory = load_config()
