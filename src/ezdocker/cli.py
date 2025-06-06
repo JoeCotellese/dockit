@@ -78,9 +78,6 @@ def run_container(container_name, base_directory):
     if any(c.status == "running" for c in running_containers):
         print(f"Container(s) for project '{project_name}' are already running.")
         return
-    if running_containers:
-        print(f"Container(s) for project '{project_name}' are already running.")
-        return
 
     # Use docker-compose through API
     try:
@@ -103,7 +100,7 @@ def stop_container(container_name, base_directory):
         print(f"Error: No docker-compose.yml file found in '{container_dir}'.")
         sys.exit(1)
 
-    client = docker.from_env()
+    client = get_docker_client()
     project_name = os.path.basename(container_dir)
 
     containers = get_project_containers(client, project_name)
@@ -132,28 +129,40 @@ def restart_container(container_name, base_directory):
 
 
 def status_containers(base_directory):
-    client = docker.from_env()
+    client = get_docker_client()
     containers = client.containers.list()
 
     if not containers:
         print("No running containers found.")
         return
 
-    for container in containers:
-        project_name = container.labels.get("com.docker.compose.project")
-        if project_name:
-            ports = container.attrs["NetworkSettings"]["Ports"]
-            for port, mappings in ports.items():
-                if mappings:
-                    for mapping in mappings:
-                        host_port = mapping["HostPort"]
-                        print(f"{project_name} - http://localhost:{host_port}")
-                else:
-                    print(f"{project_name} - No ports exposed")
+    # collect host ports by project
+    projects = {}
+    for c in containers:
+        proj = c.labels.get("com.docker.compose.project")
+        if not proj:
+            continue
+        ports = c.attrs["NetworkSettings"]["Ports"] or {}
+        for mappings in ports.values():
+            if mappings:
+                for m in mappings:
+                    projects.setdefault(proj, []).append(m["HostPort"])
+        # ensure project appears even if no ports
+        projects.setdefault(proj, [])
+
+    # print one line per project
+    for proj, hp in projects.items():
+        if hp:
+            # remove duplicates, sort, format URLs
+            urls = ", ".join(f"http://localhost:{p}"
+                             for p in sorted(set(hp)))
+            print(f"{proj} – {urls}")
+        else:
+            print(f"{proj} – No ports exposed")
 
 
 def open_container(container_name, base_directory):
-    client = docker.from_env()
+    client = get_docker_client()
     project_name = os.path.basename(container_name)
 
     containers = get_project_containers(client, project_name)
@@ -178,7 +187,7 @@ def open_container(container_name, base_directory):
 
 
 @click.group()
-@click.version_option("0.5.0", prog_name="ezdocker")
+@click.version_option("2025.6.1", prog_name="ezdocker")
 def cli():
     """Manage Docker containers from their docker-compose configurations."""
     pass
